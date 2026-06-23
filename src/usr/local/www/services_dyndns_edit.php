@@ -103,6 +103,7 @@ if ($_POST['save'] || $_POST['force']) {
 		"googledomains" => array("apex" => false, "wildcard" => true, "username_none" => false),
 		"linode" => array("apex" => false, "wildcard" => false, "username_none" => true),
 		"linode-v6" => array("apex" => false, "wildcard" => false, "username_none" => true),
+		"loopiaapi" => array("apex" => true, "wildcard" => false, "username_none" => false),
 		"luadns" => array("apex" => true, "wildcard" => true, "username_none" => false),
 		"luadns-v6" => array("apex" => true, "wildcard" => true, "username_none" => false),
 		"namecheap" => array("apex" => true, "wildcard" => true, "username_none" => true),

@@ -66,6 +66,7 @@
 	 *    - HN (hn.org) -- incomplete checking!
 	 *    - Hover (www.hover.com)
 	 *    - Loopia (loopia.se)
+	 *    - Loopia API (loopia.se)
 	 *    - LuaDNS (luadns.com)
 	 *    - Name.com (name.com)
 	 *    - Name.com IPv6 (name.com)
@@ -135,6 +136,7 @@
 	 *  HN.org          - Last Tested: 12 July 2005
 	 *  Hover           - Last Tested: 15 February 2017
 	 *  Loopia          - Last Tested: 21 August 2019
+	 *  Loopia API
 	 *  LuaDNS          - Last Tested: 20 March 2025
 	 *  Name.com        - Last Tested: 5 Dec 2021
 	 *  Name.com IPv6   - Last Tested: 5 Dec 2021
@@ -514,6 +516,7 @@
 					case 'luadns':
 					case 'luadns-v6':
 					case 'loopia':
+					case 'loopiaapi':
 					case 'mythicbeasts':
 					case 'mythicbeasts-v6':
 					case 'name.com':
@@ -868,6 +871,8 @@
 					}
 					curl_setopt($ch, CURLOPT_USERPWD, "{$this->_dnsUser}:{$this->_dnsPass}");
 					curl_setopt($ch, CURLOPT_URL, "https://dyndns.loopia.se/?system=custom&hostname={$this->_dnsHost}&myip={$this->_dnsIP}&wildcard={$this->_dnsWildcard}&mx={$this->_dnsMX}&backmx=NO");
+					break;
+				case 'loopiaapi':
 					break;
 				case 'opendns':
 					$needsIP = FALSE;
@@ -2564,6 +2569,8 @@
 						logger(LOG_ERR, $status_intro . gettext("PAYLOAD:") . " " . $data, LOG_PREFIX_DDNS);
 						$this->_debug($data);
 					}
+					break;
+				case 'loopia':
 					break;
 				case 'opendns':
 					if (preg_match('/badauth/i', $data)) {

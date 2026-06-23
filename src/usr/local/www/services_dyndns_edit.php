@@ -103,7 +103,7 @@ if ($_POST['save'] || $_POST['force']) {
 		"googledomains" => array("apex" => false, "wildcard" => true, "username_none" => false),
 		"linode" => array("apex" => false, "wildcard" => false, "username_none" => true),
 		"linode-v6" => array("apex" => false, "wildcard" => false, "username_none" => true),
-		"loopiaapi" => array("apex" => true, "wildcard" => false, "username_none" => false),
+		"loopiaapi" => array("apex" => true, "wildcard" => true, "username_none" => false),
 		"luadns" => array("apex" => true, "wildcard" => true, "username_none" => false),
 		"luadns-v6" => array("apex" => true, "wildcard" => true, "username_none" => false),
 		"namecheap" => array("apex" => true, "wildcard" => true, "username_none" => true),
@@ -412,7 +412,7 @@ $group->setHelp('Enter the complete fully qualified domain name. Example: myhost
 				'DNS Made Easy: Dynamic DNS ID (NOT hostname)%1$s' .
 				'GleSYS: Enter the record ID.%1$s' .
 				'he.net tunnelbroker: Enter the tunnel ID.%1$s' .
-				'Cloudflare, ClouDNS, DigitalOcean, GoDaddy, GratisDNS, Hover, Linode, LuaDNS, Name.com, Namecheap, Porkbun: Enter the hostname and domain name separately.
+				'Cloudflare, ClouDNS, DigitalOcean, GoDaddy, GratisDNS, Hover, Linode, Loopia-API LuaDNS, Name.com, Namecheap, Porkbun: Enter the hostname and domain name separately.
 					The domain name is the domain or subdomain zone being handled by the provider.', '<br />');
 
 $section->add($group);
@@ -678,6 +678,12 @@ events.push(function() {
 			case "godaddy-v6":
 			case "linode":
 			case "linode-v6":
+			case "loopia-api":
+				hideGroupInput('domainname', false);
+				hideInput('mx', true);
+				hideCheckbox('wildcard', true);
+				hideInput('ttl', false);
+				break;
 			case "luadns":
 			case "luadns-v6":
 			case "name.com":

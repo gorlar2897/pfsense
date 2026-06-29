@@ -104,6 +104,7 @@ if ($_POST['save'] || $_POST['force']) {
 		"linode" => array("apex" => false, "wildcard" => false, "username_none" => true),
 		"linode-v6" => array("apex" => false, "wildcard" => false, "username_none" => true),
 		"loopia-api" => array("apex" => true, "wildcard" => true, "username_none" => false),
+		"loopia-api-v6" => array("apex" => true, "wildcard" => true, "username_none" => false),
 		"luadns" => array("apex" => true, "wildcard" => true, "username_none" => false),
 		"luadns-v6" => array("apex" => true, "wildcard" => true, "username_none" => false),
 		"namecheap" => array("apex" => true, "wildcard" => true, "username_none" => true),
@@ -678,12 +679,6 @@ events.push(function() {
 			case "godaddy-v6":
 			case "linode":
 			case "linode-v6":
-			case "loopia-api":
-				hideGroupInput('domainname', false);
-				hideInput('mx', true);
-				hideCheckbox('wildcard', true);
-				hideInput('ttl', false);
-				break;
 			case "luadns":
 			case "luadns-v6":
 			case "name.com":
@@ -721,6 +716,13 @@ events.push(function() {
 				hideInput('mx', true);
 				hideCheckbox('wildcard', true);
 				break;
+			case "loopia-api":
+			case "loopia-api-v6":
+				hideGroupInput('domainname', false);
+				hideInput('mx', true);
+				hideCheckbox('wildcard', true);
+				hideInput('ttl', false);
+				break;				
 			default:
 		}
 	}

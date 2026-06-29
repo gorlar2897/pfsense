@@ -942,7 +942,7 @@
 					}
 					
 					if (!$recordId) {
-						logger(LOG_ERR, "No matching A-record found $records", LOG_PREFIX_DDNS);
+						logger(LOG_ERR, "No matching A-record found", LOG_PREFIX_DDNS);
 
 						return false;
 					}

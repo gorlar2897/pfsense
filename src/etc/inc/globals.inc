@@ -234,6 +234,7 @@ $dyndns_split_domain_types = [
 	'godaddy', 'godaddy-v6',
 	'gratisdns',
 	'linode', 'linode-v6',
+	'loopia-api',
 	'luadns', 'luadns-v6',
 	"mythicbeasts", "mythicbeasts-v6",
 	'namecheap',

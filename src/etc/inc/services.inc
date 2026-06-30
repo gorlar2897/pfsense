@@ -1261,7 +1261,7 @@ kea6_skip_first_pool_options:
 		$retval = mwexec(implode(' ', [
 			$kea_bin,
 			'-t', $keaconf_path
-		]), LOG_ERR);
+		]));
 		if ($retval <> 0) {
 			/* Try again without any custom configuration */
 			file_notice('DHCP', gettext('Failed to start DHCPv6 Server with custom configurations. See Status > System Logs for more information about this failure.'));
@@ -2599,7 +2599,7 @@ EOD;
 		$retval = mwexec(implode(' ', [
 			$kea_bin,
 			'-t', $keaconf_path
-		]), LOG_ERR);
+		]));
 		if ($retval <> 0) {
 			/* Try again without any custom configuration */
 			file_notice('DHCP', gettext('Failed to start DHCP Server with custom configurations. See Status > System Logs for more information about this failure.'));
@@ -4601,6 +4601,9 @@ function get_request_source_address($interface, int|null $address_family = null)
 
 	// Get the interface gateway.
 	$interface_gateway = '';
+	// In the case of load-balanced gateway groups with multiple online
+	// gateways, return_gateway_groups_array() will return multiple
+	// members. It may also instead return a single offline member.
 	$gateways_groups = return_gateway_groups_array();
 	if (isset($gateways_groups[$interface])) {
 		// Given interface is a gateway group.
@@ -4615,15 +4618,15 @@ function get_request_source_address($interface, int|null $address_family = null)
 
 	if (!empty($interface_gateway)) {
 		// Bail early if the gateway is down.
-		$gateways_status = return_gateways_status(true);
-		if (array_get_path($gateways_status, "{$interface_gateway}/status", '') != 'online') {
+		list($gateway_status, $gateway_details) = get_gateway_status($interface_gateway);
+		if(!is_online_gateway_status($gateway_status)) {
 			$error = 'gateway not online';
 			return [$source_address, $error];
 		}
 
 		// If the address family hasn't been specified, base it on the gateway.
 		if (!isset($address_family)) {
-			$address_family = is_ipaddrv4(array_get_path($gateways_status, "{$interface_gateway}/srcip", '')) ? AF_INET : AF_INET6;
+			$address_family = (array_get_path($gateway_details, "config/ipprotocol") == 'inet') ? AF_INET : AF_INET6;
 		}
 	}
 
@@ -5360,7 +5363,6 @@ function services_dnsupdate_process($int = "", $updatehost = "", $forced = false
 		    !isset($dnsupdate['enable'])) {
 			continue;
 		}
-		$error = null;
 		/*
 		 * If it's using a gateway group, check if interface is
 		 * the active gateway for that group
@@ -5405,22 +5407,10 @@ function services_dnsupdate_process($int = "", $updatehost = "", $forced = false
 			list($wanip, $error) = get_request_source_address($dnsupdate['interface'], AF_INET);
 			$bindipv4 = $wanip;
 		}
-		if (isset($error) && ($dnsupdate['recordtype'] != "AAAA")) {
-			logger(LOG_ERR, localize_text(
-				'(%1$s) Could not determine the request IPv4 address: %2$s',
-				$dnsupdate['host'], $error), LOG_PREFIX_DDNS
-			);
-		}
 		if (is_stf_interface($dnsupdate['interface'])) {
 			$wanipv6 = get_interface_ipv6($dnsupdate['interface'] . '_stf');
 		} else {
 			list($wanipv6, $error) = get_request_source_address($dnsupdate['interface'], AF_INET6);
-			if (isset($error) && ($dnsupdate['recordtype'] != "A")) {
-				logger(LOG_ERR, localize_text(
-					'(%1$s) Could not determine the request IPv6 address: %2$s',
-					$dnsupdate['host'], $error), LOG_PREFIX_DDNS
-				);
-			}
 		}
 		$bindipv6 = $wanipv6;
 
@@ -5432,22 +5422,10 @@ function services_dnsupdate_process($int = "", $updatehost = "", $forced = false
 		} elseif (!empty($dnsupdate['updatesource'])) {
 			/* Find the alternate binding address */
 			list($bindipv4, $error) = get_request_source_address($dnsupdate['updatesource'], AF_INET);
-			if (isset($error) && ($dnsupdate['recordtype'] != "AAAA")) {
-				logger(LOG_ERR, localize_text(
-					'(%1$s) Could not determine the update source IPv4 address: %2$s',
-					$dnsupdate['host'], $error), LOG_PREFIX_DDNS
-				);
-			}
 			if (is_stf_interface($dnsupdate['interface'])) {
 				$bindipv6 = get_interface_ipv6($dnsupdate['updatesource'] . '_stf');
 			} else {
 				list($bindipv6, $error) = get_request_source_address($dnsupdate['updatesource'], AF_INET6);
-				if (isset($error) && ($dnsupdate['recordtype'] != "A")) {
-					logger(LOG_ERR, localize_text(
-						'(%1$s) Could not determine the update source IPv6 address: %2$s',
-						$dnsupdate['host'], $error), LOG_PREFIX_DDNS
-					);
-				}
 			}
 		}
 
@@ -5594,7 +5572,7 @@ EOD;
 
 		$cmd .= " {$g['varetc_path']}/nsupdatecmds{$i}";
 
-		if (mwexec($cmd, LOG_ERR) == 0) {
+		if (mwexec($cmd) == 0) {
 			$if = get_real_interface($dnsupdate['interface']);
 			if (!empty($cacheFile)) {
 				@file_put_contents($cacheFile,

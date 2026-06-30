@@ -67,6 +67,7 @@
 	 *    - Hover (www.hover.com)
 	 *    - Loopia (loopia.se)
 	 *    - Loopia API (loopia.se)
+	 *    - Loopia API IPv6 (loopia.se)
 	 *    - LuaDNS (luadns.com)
 	 *    - Name.com (name.com)
 	 *    - Name.com IPv6 (name.com)
@@ -137,6 +138,7 @@
 	 *  Hover           - Last Tested: 15 February 2017
 	 *  Loopia          - Last Tested: 21 August 2019
 	 *  Loopia API
+	 *  Loopia API IPv6
 	 *  LuaDNS          - Last Tested: 20 March 2025
 	 *  Name.com        - Last Tested: 5 Dec 2021
 	 *  Name.com IPv6   - Last Tested: 5 Dec 2021
@@ -249,6 +251,7 @@
 				'gandi-livedns-v6' => true,
 				'godaddy-v6' => true,
 				'he-net-v6' => true,
+				'loopia-api-v6' => true,
 				'name.com-v6' => true,
 				'nicru-v6' => true,
 				'noip-free-v6' => true,
@@ -373,6 +376,7 @@
 				case 'godaddy-v6':
 				case 'he-net-v6':
 				case 'linode-v6':
+				case 'loopia-api-v6':
 				case 'luadns-v6':
 				case 'mythicbeasts-v6':
 				case 'name.com-v6':
@@ -517,6 +521,7 @@
 					case 'luadns-v6':
 					case 'loopia':
 					case 'loopia-api':
+					case 'loopia-api-v6':
 					case 'mythicbeasts':
 					case 'mythicbeasts-v6':
 					case 'name.com':
@@ -873,14 +878,18 @@
 					curl_setopt($ch, CURLOPT_URL, "https://dyndns.loopia.se/?system=custom&hostname={$this->_dnsHost}&myip={$this->_dnsIP}&wildcard={$this->_dnsWildcard}&mx={$this->_dnsMX}&backmx=NO");
 					break;
 				case 'loopia-api':
-
+				case 'loopia-api-v6':
 					curl_setopt_array($ch, [
 					    CURLOPT_RETURNTRANSFER => true,
 					    CURLOPT_POST => true,
 					    CURLOPT_HTTPHEADER => ["Content-Type: text/xml"],
 						CURLOPT_URL => "https://api.loopia.se/RPCSERV"
 					]);
-					
+					if ($this->_addressFamilyRR == AF_INET6) {
+						$recordType = "AAAA";
+					} else {
+						$recordType = "A";
+					}					
 					/* ---------------------------
 					   1. GET ZONE RECORDS
 					----------------------------*/
@@ -935,7 +944,7 @@
 					    $type = $xpath->evaluate("string(.//member[name='type']/value/string)", $r);
 					    $id   = $xpath->evaluate("string(.//member[name='record_id']/value/int)", $r);
 
-						if ($type === "A" && $id) {
+						if ($type === $recordType && $id) {
 					        $recordId = $id;
 					        break;
 					    }
@@ -968,7 +977,7 @@
 					    </member>
 					    <member>
 					        <name>type</name>
-					        <value><string>A</string></value>
+					        <value><string>'.$recordType.'</string></value>
 					    </member>
 					    <member>
 					        <name>ttl</name>
@@ -2688,6 +2697,7 @@
 					}
 					break;
 				case 'loopia-api':
+				case 'loopia-api-v6':
 					if (preg_match("/OK/i", $data)) {
 						$status = $status_intro . $success_str . gettext("IP Address Changed Successfully!");
 						$successful_update = true;

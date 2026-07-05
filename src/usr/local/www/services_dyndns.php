@@ -144,7 +144,7 @@ foreach (config_get_path("dyndnses/dyndns", []) as $dyndns):
 	} else {
 		$icon_class = "fa-solid fa-times-circle";
 		$text_class = "text-danger";
-		$icon_title = "No cached IP";
+		$icon_title = "Failed";
 	}
 ?>
 						<tr<?=!isset($dyndns['enable'])?' class="disabled"':''?>>

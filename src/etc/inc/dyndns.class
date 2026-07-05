@@ -967,7 +967,7 @@
 					<struct>
 					    <member>
 					        <name>record_id</name>
-					        <value><int>"{$recordId}".'</int></value>
+					        <value><int>"{$recordId}"</int></value>
 					    </member>
 					    <member>
 					        <name>type</name>

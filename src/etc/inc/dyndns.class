@@ -898,10 +898,10 @@
 					<methodCall>
 					<methodName>getZoneRecords</methodName>
 					<params>
-					<param><value><string>'.htmlspecialchars($this->_dnsUser).'</string></value></param>
-					<param><value><string>'.htmlspecialchars($this->_dnsPass).'</string></value></param>
-					<param><value><string>'.htmlspecialchars($this->_dnsDomain).'</string></value></param>
-					<param><value><string>'.htmlspecialchars($this->_dnsHost).'</string></value></param>
+					<param><value><string>"{htmlspecialchars($this->_dnsUser)}"</string></value></param>
+					<param><value><string>"{htmlspecialchars($this->_dnsPass)}"</string></value></param>
+					<param><value><string>"{htmlspecialchars($this->_dnsDomain)}"</string></value></param>
+					<param><value><string>"{htmlspecialchars($this->_dnsHost)}"</string></value></param>
 					</params>
 					</methodCall>';
 					
@@ -964,24 +964,24 @@
 					<methodCall>
 					<methodName>updateZoneRecord</methodName>
 					<params>
-					<param><value><string>'.htmlspecialchars($this->_dnsUser).'</string></value></param>
-					<param><value><string>'.htmlspecialchars($this->_dnsPass).'</string></value></param>
-					<param><value><string>'.htmlspecialchars($this->_dnsDomain).'</string></value></param>
-					<param><value><string>'.htmlspecialchars($this->_dnsHost).'</string></value></param>
+					<param><value><string>"{htmlspecialchars($this->_dnsUser)}"</string></value></param>
+					<param><value><string>"{htmlspecialchars($this->_dnsPass)}"</string></value></param>
+					<param><value><string>"{htmlspecialchars($this->_dnsDomain)}"</string></value></param>
+					<param><value><string>"{htmlspecialchars($this->_dnsHost)}"</string></value></param>
 					<param>
 					<value>
 					<struct>
 					    <member>
 					        <name>record_id</name>
-					        <value><int>'.$recordId.'</int></value>
+					        <value><int>"{$recordId}".'</int></value>
 					    </member>
 					    <member>
 					        <name>type</name>
-					        <value><string>'.$recordType.'</string></value>
+					        <value><string>"{$recordType}"</string></value>
 					    </member>
 					    <member>
 					        <name>ttl</name>
-					        <value><int>'.$this->_dnsTTL.'</int></value>
+					        <value><int>"{$this->_dnsTTL}"</int></value>
 					    </member>
 					    <member>
 					        <name>priority</name>
@@ -989,7 +989,7 @@
 					    </member>
 					    <member>
 					        <name>rdata</name>
-					        <value><string>'.$this->_dnsIP.'</string></value>
+					        <value><string>"{$this->_dnsIP}"</string></value>
 					    </member>
 					</struct>
 					</value>

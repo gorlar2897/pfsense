@@ -137,8 +137,8 @@
 	 *  HN.org          - Last Tested: 12 July 2005
 	 *  Hover           - Last Tested: 15 February 2017
 	 *  Loopia          - Last Tested: 21 August 2019
-	 *  Loopia API
-	 *  Loopia API IPv6
+	 *  Loopia API		- Last Tested: 6 July 2026
+	 *  Loopia API IPv6 - Last Tested: 6 July 2026
 	 *  LuaDNS          - Last Tested: 20 March 2025
 	 *  Name.com        - Last Tested: 5 Dec 2021
 	 *  Name.com IPv6   - Last Tested: 5 Dec 2021
@@ -879,6 +879,11 @@
 					break;
 				case 'loopia-api':
 				case 'loopia-api-v6':
+					/*
+						Uses Loopia XML-RPC API, https://support.loopia.com/wiki/loopiaapi/
+						API user needs  access to methods getZoneRecords and updateZoneRecord.
+						Limitation: only first A/AAAA record is updated.
+					*/
 					curl_setopt_array($ch, [
 					    CURLOPT_RETURNTRANSFER => true,
 					    CURLOPT_POST => true,
@@ -890,10 +895,7 @@
 					} else {
 						$recordType = "A";
 					}					
-					/* ---------------------------
-					   1. GET ZONE RECORDS
-					----------------------------*/
-					
+				
 					$xml = '<?xml version="1.0"?>
 					<methodCall>
 					<methodName>getZoneRecords</methodName>
@@ -912,10 +914,6 @@
 						logger(LOG_ERR, "cURL error: " . curl_error($ch), LOG_PREFIX_DDNS);
 						return false;
 					}
-					
-					/* ---------------------------
-					   2. PARSE + FIND RECORD
-					----------------------------*/
 					
 					libxml_use_internal_errors(true);
 					
@@ -955,10 +953,6 @@
 
 						return false;
 					}
-					
-					/* ---------------------------
-					   3. UPDATE RECORD
-					----------------------------*/
 					
 					$updateXml = '<?xml version="1.0"?>
 					<methodCall>

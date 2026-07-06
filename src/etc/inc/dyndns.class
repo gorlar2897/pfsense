@@ -137,8 +137,8 @@
 	 *  HN.org          - Last Tested: 12 July 2005
 	 *  Hover           - Last Tested: 15 February 2017
 	 *  Loopia          - Last Tested: 21 August 2019
-	 *  Loopia API		- Last Tested: 6 July 2026
-	 *  Loopia API IPv6 - Last Tested: 6 July 2026
+	 *  Loopia API
+	 *  Loopia API IPv6
 	 *  LuaDNS          - Last Tested: 20 March 2025
 	 *  Name.com        - Last Tested: 5 Dec 2021
 	 *  Name.com IPv6   - Last Tested: 5 Dec 2021
@@ -884,6 +884,7 @@
 						API user needs  access to methods getZoneRecords and updateZoneRecord.
 						Limitation: only first A/AAAA record is updated.
 					*/
+
 					curl_setopt_array($ch, [
 					    CURLOPT_RETURNTRANSFER => true,
 					    CURLOPT_POST => true,
@@ -895,15 +896,16 @@
 					} else {
 						$recordType = "A";
 					}					
+					//   1. GET ZONE RECORDS
 				
 					$xml = '<?xml version="1.0"?>
 					<methodCall>
 					<methodName>getZoneRecords</methodName>
 					<params>
-					<param><value><string>"{htmlspecialchars($this->_dnsUser)}"</string></value></param>
-					<param><value><string>"{htmlspecialchars($this->_dnsPass)}"</string></value></param>
-					<param><value><string>"{htmlspecialchars($this->_dnsDomain)}"</string></value></param>
-					<param><value><string>"{htmlspecialchars($this->_dnsHost)}"</string></value></param>
+					<param><value><string>'.htmlspecialchars($this->_dnsUser).'</string></value></param>
+					<param><value><string>'.htmlspecialchars($this->_dnsPass).'</string></value></param>
+					<param><value><string>'.htmlspecialchars($this->_dnsDomain).'</string></value></param>
+					<param><value><string>'.htmlspecialchars($this->_dnsHost).'</string></value></param>
 					</params>
 					</methodCall>';
 					
@@ -914,6 +916,8 @@
 						logger(LOG_ERR, "cURL error: " . curl_error($ch), LOG_PREFIX_DDNS);
 						return false;
 					}
+					
+					// 2. PARSE + FIND RECORD
 					
 					libxml_use_internal_errors(true);
 					
@@ -954,28 +958,30 @@
 						return false;
 					}
 					
+					// 3. UPDATE RECORD
+					
 					$updateXml = '<?xml version="1.0"?>
 					<methodCall>
 					<methodName>updateZoneRecord</methodName>
 					<params>
-					<param><value><string>"{htmlspecialchars($this->_dnsUser)}"</string></value></param>
-					<param><value><string>"{htmlspecialchars($this->_dnsPass)}"</string></value></param>
-					<param><value><string>"{htmlspecialchars($this->_dnsDomain)}"</string></value></param>
-					<param><value><string>"{htmlspecialchars($this->_dnsHost)}"</string></value></param>
+					<param><value><string>'.htmlspecialchars($this->_dnsUser).'</string></value></param>
+					<param><value><string>'.htmlspecialchars($this->_dnsPass).'</string></value></param>
+					<param><value><string>'.htmlspecialchars($this->_dnsDomain).'</string></value></param>
+					<param><value><string>'.htmlspecialchars($this->_dnsHost).'</string></value></param>
 					<param>
 					<value>
 					<struct>
 					    <member>
 					        <name>record_id</name>
-					        <value><int>"{$recordId}"</int></value>
+					        <value><int>'.$recordId.'</int></value>
 					    </member>
 					    <member>
 					        <name>type</name>
-					        <value><string>"{$recordType}"</string></value>
+					        <value><string>'.$recordType.'</string></value>
 					    </member>
 					    <member>
 					        <name>ttl</name>
-					        <value><int>"{$this->_dnsTTL}"</int></value>
+					        <value><int>'.$this->_dnsTTL.'</int></value>
 					    </member>
 					    <member>
 					        <name>priority</name>
@@ -983,7 +989,7 @@
 					    </member>
 					    <member>
 					        <name>rdata</name>
-					        <value><string>"{$this->_dnsIP}"</string></value>
+					        <value><string>'.$this->_dnsIP.'</string></value>
 					    </member>
 					</struct>
 					</value>

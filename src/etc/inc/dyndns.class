@@ -948,6 +948,7 @@
 
 						if ($type === $recordType && $id) {
 					        $recordId = $id;
+							$existing_ttl = $record["ttl"];
 					        break;
 					    }
 					}
@@ -981,7 +982,7 @@
 					    </member>
 					    <member>
 					        <name>ttl</name>
-					        <value><int>'.$this->_dnsTTL.'</int></value>
+					        <value><int>'.max($this->_dnsTTL, $existing_ttl, 300).'</int></value>
 					    </member>
 					    <member>
 					        <name>priority</name>

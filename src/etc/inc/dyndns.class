@@ -945,7 +945,8 @@
 					
 					    $type = $xpath->evaluate("string(.//member[name='type']/value/string)", $r);
 					    $id   = $xpath->evaluate("string(.//member[name='record_id']/value/int)", $r);
-						$existing_ttl =  $xpath->evaluate("string(.//member[name='ttl']/value/int)", $r);
+						$ttl =  $xpath->evaluate("string(.//member[name='ttl']/value/int)", $r);
+						$priority =  $xpath->evaluate("string(.//member[name='priority']/value/int)", $r);
 
 						if ($type === $recordType && $id) {
 					        $recordId = $id;
@@ -982,11 +983,11 @@
 					    </member>
 					    <member>
 					        <name>ttl</name>
-					        <value><int>'.max($this->_dnsTTL ?: $existing_ttl, 300).'</int></value>
+					        <value><int>'.max($this->_dnsTTL ?: $ttl, 300).'</int></value>
 					    </member>
 					    <member>
 					        <name>priority</name>
-					        <value><int>0</int></value>
+					        <value><int>'.$priority.'</int></value>
 					    </member>
 					    <member>
 					        <name>rdata</name>

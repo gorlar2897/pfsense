@@ -103,6 +103,8 @@ if ($_POST['save'] || $_POST['force']) {
 		"googledomains" => array("apex" => false, "wildcard" => true, "username_none" => false),
 		"linode" => array("apex" => false, "wildcard" => false, "username_none" => true),
 		"linode-v6" => array("apex" => false, "wildcard" => false, "username_none" => true),
+		"loopia-api" => array("apex" => true, "wildcard" => true, "username_none" => false),
+		"loopia-api-v6" => array("apex" => true, "wildcard" => true, "username_none" => false),
 		"luadns" => array("apex" => true, "wildcard" => true, "username_none" => false),
 		"luadns-v6" => array("apex" => true, "wildcard" => true, "username_none" => false),
 		"namecheap" => array("apex" => true, "wildcard" => true, "username_none" => true),
@@ -405,13 +407,13 @@ $group->add(new Form_Input(
 ));
 
 $group->setHelp('Enter the complete fully qualified domain name. Example: myhost.dyndns.org%1$s' .
-				'Azure, Cloudflare, Linode, LuaDNS, Porkbun: Name.com: Enter @ as the hostname to indicate an empty field.%1$s' .
+				'Azure, Cloudflare, Linode, Loopia-API, LuaDNS, Porkbun: Name.com: Enter @ as the hostname to indicate an empty field.%1$s' .
 				'deSEC: Enter the FQDN.%1$s' .
 				'DNSimple: Enter only the domain name.%1$s' .
 				'DNS Made Easy: Dynamic DNS ID (NOT hostname)%1$s' .
 				'GleSYS: Enter the record ID.%1$s' .
 				'he.net tunnelbroker: Enter the tunnel ID.%1$s' .
-				'Cloudflare, ClouDNS, DigitalOcean, GoDaddy, GratisDNS, Hover, Linode, LuaDNS, Name.com, Namecheap, Porkbun: Enter the hostname and domain name separately.
+				'Cloudflare, ClouDNS, DigitalOcean, GoDaddy, GratisDNS, Hover, Linode, Loopia-API, LuaDNS, Name.com, Namecheap, Porkbun: Enter the hostname and domain name separately.
 					The domain name is the domain or subdomain zone being handled by the provider.', '<br />');
 
 $section->add($group);
@@ -714,6 +716,13 @@ events.push(function() {
 				hideInput('mx', true);
 				hideCheckbox('wildcard', true);
 				break;
+			case "loopia-api":
+			case "loopia-api-v6":
+				hideGroupInput('domainname', false);
+				hideInput('mx', true);
+				hideCheckbox('wildcard', true);
+				hideInput('ttl', false);
+				break;				
 			default:
 		}
 	}

@@ -66,6 +66,8 @@
 	 *    - HN (hn.org) -- incomplete checking!
 	 *    - Hover (www.hover.com)
 	 *    - Loopia (loopia.se)
+	 *    - Loopia API (loopia.se)
+	 *    - Loopia API IPv6 (loopia.se)
 	 *    - LuaDNS (luadns.com)
 	 *    - Name.com (name.com)
 	 *    - Name.com IPv6 (name.com)
@@ -135,6 +137,8 @@
 	 *  HN.org          - Last Tested: 12 July 2005
 	 *  Hover           - Last Tested: 15 February 2017
 	 *  Loopia          - Last Tested: 21 August 2019
+	 *  Loopia API
+	 *  Loopia API IPv6
 	 *  LuaDNS          - Last Tested: 20 March 2025
 	 *  Name.com        - Last Tested: 5 Dec 2021
 	 *  Name.com IPv6   - Last Tested: 5 Dec 2021
@@ -247,6 +251,7 @@
 				'gandi-livedns-v6' => true,
 				'godaddy-v6' => true,
 				'he-net-v6' => true,
+				'loopia-api-v6' => true,
 				'name.com-v6' => true,
 				'nicru-v6' => true,
 				'noip-free-v6' => true,
@@ -371,6 +376,7 @@
 				case 'godaddy-v6':
 				case 'he-net-v6':
 				case 'linode-v6':
+				case 'loopia-api-v6':
 				case 'luadns-v6':
 				case 'mythicbeasts-v6':
 				case 'name.com-v6':
@@ -514,6 +520,8 @@
 					case 'luadns':
 					case 'luadns-v6':
 					case 'loopia':
+					case 'loopia-api':
+					case 'loopia-api-v6':
 					case 'mythicbeasts':
 					case 'mythicbeasts-v6':
 					case 'name.com':
@@ -869,6 +877,131 @@
 					curl_setopt($ch, CURLOPT_USERPWD, "{$this->_dnsUser}:{$this->_dnsPass}");
 					curl_setopt($ch, CURLOPT_URL, "https://dyndns.loopia.se/?system=custom&hostname={$this->_dnsHost}&myip={$this->_dnsIP}&wildcard={$this->_dnsWildcard}&mx={$this->_dnsMX}&backmx=NO");
 					break;
+				case 'loopia-api':
+				case 'loopia-api-v6':
+					/*
+						Uses Loopia XML-RPC API, https://support.loopia.com/wiki/loopiaapi/
+						API user needs  access to methods getZoneRecords and updateZoneRecord.
+						Limitation: only first A/AAAA record is updated.
+					*/
+
+					curl_setopt_array($ch, [
+					    CURLOPT_RETURNTRANSFER => true,
+					    CURLOPT_POST => true,
+					    CURLOPT_HTTPHEADER => ["Content-Type: text/xml"],
+						CURLOPT_URL => "https://api.loopia.se/RPCSERV"
+					]);
+					if ($this->_addressFamilyRR == AF_INET6) {
+						$recordType = "AAAA";
+					} else {
+						$recordType = "A";
+					}					
+					//   1. GET ZONE RECORDS
+				
+					$xml = '<?xml version="1.0"?>
+					<methodCall>
+					<methodName>getZoneRecords</methodName>
+					<params>
+					<param><value><string>'.htmlspecialchars($this->_dnsUser).'</string></value></param>
+					<param><value><string>'.htmlspecialchars($this->_dnsPass).'</string></value></param>
+					<param><value><string>'.htmlspecialchars($this->_dnsDomain).'</string></value></param>
+					<param><value><string>'.htmlspecialchars($this->_dnsHost).'</string></value></param>
+					</params>
+					</methodCall>';
+					
+					curl_setopt($ch, CURLOPT_POSTFIELDS, $xml);
+					$response = curl_exec($ch);
+					
+					if ($response === false) {
+						logger(LOG_ERR, "cURL error: " . curl_error($ch), LOG_PREFIX_DDNS);
+						return false;
+					}
+					
+					// 2. PARSE + FIND RECORD
+					
+					libxml_use_internal_errors(true);
+					
+					$dom = new DOMDocument();
+					if (!$dom->loadXML($response)) {
+
+						logger(LOG_ERR, "Invalid XML response", LOG_PREFIX_DDNS);
+
+						return false;
+					}
+					
+					$xpath = new DOMXPath($dom);
+					
+					if ($xpath->query("//fault")->length > 0) {
+					    $faultText = trim($xpath->query("//fault")->item(0)->textContent);
+
+						logger(LOG_ERR, "API fault: " . $faultText, LOG_PREFIX_DDNS);
+						return false;
+					}
+					
+					$records = $xpath->query("//struct");
+					$recordId = null;
+					
+					foreach ($records as $r) {
+					
+					    $type = $xpath->evaluate("string(.//member[name='type']/value/string)", $r);
+					    $id   = $xpath->evaluate("string(.//member[name='record_id']/value/int)", $r);
+						$ttl =  $xpath->evaluate("string(.//member[name='ttl']/value/int)", $r);
+						$priority =  $xpath->evaluate("string(.//member[name='priority']/value/int)", $r);
+
+						if ($type === $recordType && $id) {
+					        $recordId = $id;
+					        break;
+					    }
+					}
+					
+					if (!$recordId) {
+						logger(LOG_ERR, "No matching A-record found", LOG_PREFIX_DDNS);
+
+						return false;
+					}
+					
+					// 3. UPDATE RECORD
+					
+					$updateXml = '<?xml version="1.0"?>
+					<methodCall>
+					<methodName>updateZoneRecord</methodName>
+					<params>
+					<param><value><string>'.htmlspecialchars($this->_dnsUser).'</string></value></param>
+					<param><value><string>'.htmlspecialchars($this->_dnsPass).'</string></value></param>
+					<param><value><string>'.htmlspecialchars($this->_dnsDomain).'</string></value></param>
+					<param><value><string>'.htmlspecialchars($this->_dnsHost).'</string></value></param>
+					<param>
+					<value>
+					<struct>
+					    <member>
+					        <name>record_id</name>
+					        <value><int>'.$recordId.'</int></value>
+					    </member>
+					    <member>
+					        <name>type</name>
+					        <value><string>'.$recordType.'</string></value>
+					    </member>
+					    <member>
+					        <name>ttl</name>
+					        <value><int>'.max($this->_dnsTTL ?: $ttl, 300).'</int></value>
+					    </member>
+					    <member>
+					        <name>priority</name>
+					        <value><int>'.$priority.'</int></value>
+					    </member>
+					    <member>
+					        <name>rdata</name>
+					        <value><string>'.$this->_dnsIP.'</string></value>
+					    </member>
+					</struct>
+					</value>
+					</param>
+					</params>
+					</methodCall>';
+					
+					curl_setopt($ch, CURLOPT_POSTFIELDS, $updateXml);
+					break;
+
 				case 'opendns':
 					$needsIP = FALSE;
 					if (isset($this->_dnsWildcard) && $this->_dnsWildcard != "OFF") $this->_dnsWildcard = "ON";
@@ -2558,6 +2691,19 @@
 						$status = $status_intro . $success_str . gettext("IP Address Changed Successfully!");
 						$successful_update = true;
 					} else if (preg_match('/badauth/i', $data)) {
+						$status = $status_intro . $error_str . gettext("User Authorization Failed");
+					} else {
+						$status = $status_intro . "(" . gettext("Unknown Response") . ")";
+						logger(LOG_ERR, $status_intro . gettext("PAYLOAD:") . " " . $data, LOG_PREFIX_DDNS);
+						$this->_debug($data);
+					}
+					break;
+				case 'loopia-api':
+				case 'loopia-api-v6':
+					if (preg_match("/OK/i", $data)) {
+						$status = $status_intro . $success_str . gettext("IP Address Changed Successfully!");
+						$successful_update = true;
+					} else if (preg_match('/AUTH_ERROR/i', $data)) {
 						$status = $status_intro . $error_str . gettext("User Authorization Failed");
 					} else {
 						$status = $status_intro . "(" . gettext("Unknown Response") . ")";
